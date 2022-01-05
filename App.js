@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList } from 'react-native-web';
+import { Button, FlatList } from 'react-native-web';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -54,6 +54,13 @@ export default class App extends React.Component {
     });
   }
 
+  addList() {
+    this.referenceShoppingList.add({
+      name: 'NewList',
+      items: ['wine, beer, whiskey']
+    });
+  }
+
   render() {
     console.log('state', this.state.lists);
 
@@ -65,6 +72,8 @@ export default class App extends React.Component {
         renderItem={({ item }) => 
         <Text style={styles.list}>{item.name}: {item.items}</Text>}
         ></FlatList>
+        <Button title="Add list"
+        onPress={() => this.addList()}></Button>
         <StatusBar style="auto" />
       </View>
   );
