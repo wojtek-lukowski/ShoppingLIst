@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, FlatList } from 'react-native-web';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { isRequired } from 'react-native/Libraries/DeprecatedPropTypes/DeprecatedColorPropType';
 
 const firebase = require('firebase');
 require('firebase/firestore');
@@ -27,17 +28,33 @@ export default class App extends React.Component {
       this.referenceShoppingList = firebase.firestore().collection('shoppinglist');
 
       this.state = {
-        lists: []
+        lists: [],
+        uid: user.uid,
+        loggedInText: 'Hello there',
+        uid: 0,
+      loggedInText: 'Please wait, you are getting logged in',
       };
   }
 
   componentDidMount() {
-    this.referenceShoppingList = firebase.firestore().collection('shoppinglist');
-    this.unsubscribe = this.referenceShoppingList.onSnapshot(this.onCollectionUpdate)
+    // this.referenceShoppingList = firebase.firestore().collection('shoppinglist');
+    // this.unsubscribe = this.referenceShoppingList.onSnapshot(this.onCollectionUpdate)
+    this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        await firebase.auth().signInAnonymously();
+      }
+        this.setState({
+          uid: user.uid,
+        loggedInText: 'Hello there'
+        });
+    })
+    this.referenceShoppingListUser = firebase.firestore().collection('shoppinglist').where('uid', "==", this.state.uid);
+    this.unsubscribeListUser = this.referenceShoppinglistUser.onSnapshot(this.onCollectionUpdate);
   }
 
   componentWillUnmount() {
-    this.unsubscribe();
+    this.authUnsubscribe();
+    this.unsubscribeListUser();
   }
 
   onCollectionUpdate = (querySnapshot) => {
@@ -57,7 +74,8 @@ export default class App extends React.Component {
   addList() {
     this.referenceShoppingList.add({
       name: 'NewList',
-      items: ['wine, beer, whiskey']
+      items: ['wine', 'beer', 'whiskey'],
+      uid: this.state.uid
     });
   }
 
@@ -67,6 +85,7 @@ export default class App extends React.Component {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>All Lists</Text>
+        <Text>{this,state.loggedInText}</Text>
         <FlatList
         data={this.state.lists}
         renderItem={({ item }) => 
